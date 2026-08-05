@@ -1,0 +1,18 @@
+{
+  "Rules": [
+    {
+      "ID": "expire-nonprod-backups-7d",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "nonprod/" },
+      "Expiration": { "Days": 7 },
+      "NoncurrentVersionExpiration": { "NoncurrentDays": 1 },
+      "AbortIncompleteMultipartUpload": { "DaysAfterInitiation": 1 }
+    },
+    {
+      "ID": "clean-expired-delete-markers",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "" },
+      "Expiration": { "ExpiredObjectDeleteMarker": true }
+    }
+  ]
+}

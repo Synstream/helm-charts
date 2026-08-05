@@ -129,6 +129,19 @@ Each chart follows standard Helm best practices:
 - `templates/` - Kubernetes resource templates
 - `README.md` - Chart-specific documentation
 
+## Operations
+
+Beyond the charts, this repository holds the operational tooling for the nonprod
+cluster, because backup and recovery span every service and belong to none of
+the per-service repositories:
+
+- `scripts/synstream-backup.sh` — nightly backup, run from cron on the node
+- `scripts/synstream-restore.sh` — restore counterpart, safe by default
+- `docs/backup-dr/` — the DR plan, runbook, and S3 lifecycle configuration
+
+Neither directory is packaged or released: `release.yml` only ever touches
+`charts/`. See `docs/backup-dr/README.md`.
+
 ## Contributing
 
 When adding or updating charts:

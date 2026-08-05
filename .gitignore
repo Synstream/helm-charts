@@ -15,3 +15,17 @@ Thumbs.db
 # Dependencies
 charts/*/charts/
 charts/*/Chart.lock
+
+# Backup artifacts (see docs/backup-dr/). Archives and dumps carry Kubernetes
+# Secrets and database contents in the clear; they belong on the node and in S3,
+# never in git. *.tar.gz is already covered by the Helm rules above.
+*.tar.gz.sha256
+*.dump
+*.db
+*.db-wal
+*.db-shm
+
+# Node-side runtime state, in case this repo is ever cloned onto the node.
+s3.env
+*.log
+LAST_STATUS
