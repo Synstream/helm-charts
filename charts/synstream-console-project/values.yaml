@@ -79,19 +79,60 @@ nginx:
   
   # Nginx configuration
   config:
+    # CORS allow-list for the auth API (/api/v2). One nginx map regex — set this
+    # instance's Console + Pipeline origins here. Rendered into the map in
+    # templates/nginx-configmap.yaml so it is per-instance without editing the nginx
+    # block below. Single-quoted so the regex backslashes survive YAML intact.
+    corsAllowedOriginRegex: '~^https?://(console-page-nonprod\.rtsinv\.com|pipeline-studio-nonprod\.rtsinv\.com|localhost(:[0-9]+)?)$'
     defaultConf: |
+      # Security response headers, shared by all locations.
+      # Kept in a snippet file so both the server scope and the /api/v2 location
+      # (which defines its own add_header and therefore does NOT inherit) stay in sync.
+      # TISSA/HostedScan remediation: #10 anti-clickjacking, #11 CSP not set, #13 nosniff.
+
       server {
           listen 80;
           server_name _;
-          
+
+          # Applied at server scope -> inherited by "location /" (serves the scanned HTML/SPA).
+          add_header X-Frame-Options "SAMEORIGIN" always;
+          add_header X-Content-Type-Options "nosniff" always;
+          add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+          add_header Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()" always;
+          add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'" always;
+
           location /api/v2 {
+              if ($request_method = OPTIONS) {
+                  add_header Access-Control-Allow-Origin $cors_origin always;
+                  add_header Access-Control-Allow-Credentials true always;
+                  add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS" always;
+                  add_header Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Origin, Accept" always;
+                  add_header Access-Control-Max-Age 86400 always;
+                  add_header Content-Length 0;
+                  add_header Content-Type text/plain;
+                  return 204;
+              }
+
+              # Existing CORS for the auth API.
+              add_header Access-Control-Allow-Origin $cors_origin always;
+              add_header Access-Control-Allow-Credentials true always;
+              add_header Access-Control-Expose-Headers "Authorization, Set-Cookie" always;
+
+              # Repeated here: nginx add_header does not inherit into a location that
+              # defines its own add_header directives.
+              add_header X-Frame-Options "SAMEORIGIN" always;
+              add_header X-Content-Type-Options "nosniff" always;
+              add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+              add_header Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()" always;
+              add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'" always;
+
               proxy_pass http://synstream-auth:8080;
               proxy_set_header Host $host;
               proxy_set_header X-Real-IP $remote_addr;
               proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
               proxy_set_header X-Forwarded-Proto $scheme;
           }
-          
+
           location / {
               proxy_pass http://synstream-console-project:80;
               proxy_set_header Host $host;
@@ -100,7 +141,7 @@ nginx:
               proxy_set_header X-Forwarded-Proto $scheme;
           }
       }
-  
+
   podAnnotations: {}
   nodeSelector: {}
   tolerations: []

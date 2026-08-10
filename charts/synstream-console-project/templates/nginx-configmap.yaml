@@ -7,6 +7,11 @@ metadata:
     {{- include "synstream.componentLabels" (dict "name" "synstream-nginx" "workloadType" "deployment" "Chart" .Chart "Release" .Release) | nindent 4 }}
 data:
   default.conf: |
-{{- .Values.nginx.config.defaultConf | nindent 4 }}
+    # CORS allow-list, rendered per-instance from .Values.nginx.config.corsAllowedOriginRegex.
+    map $http_origin $cors_origin {
+        default "";
+        "{{ .Values.nginx.config.corsAllowedOriginRegex }}" $http_origin;
+    }
+{{ .Values.nginx.config.defaultConf | nindent 4 }}
 {{- end }}
 
