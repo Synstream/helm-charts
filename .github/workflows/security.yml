@@ -24,8 +24,12 @@ permissions:
 env:
   # Pinned by version, installed as a binary, matching the gitleaks.yml idiom.
   GITLEAKS_VERSION: "8.21.2"
-  SEMGREP_VERSION: "1.97.0"
-  TRIVY_VERSION: "0.58.1"
+  # Pinned to the versions that produced audit/results/20260908-staging. The
+  # suppression list is seeded from that run and holds semgrep rule ids, so a
+  # version drift here shows up as findings the list does not cover and the gate
+  # goes red for a reason that has nothing to do with the code.
+  SEMGREP_VERSION: "1.176.1"
+  TRIVY_VERSION: "0.74.0"
   # Two modules declare go 1.25.7, so the toolchain floor is that, not 1.24.
   GO_VERSION: "1.25.7"
   HELM_VERSION: "v3.16.3"
@@ -73,8 +77,15 @@ jobs:
       - name: Clone the code
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
+      # setuptools is injected because semgrep's opentelemetry dependency still
+      # imports pkg_resources, which is not present in a Python 3.12 venv by
+      # default. Without it the install succeeds and the first invocation dies
+      # with ModuleNotFoundError.
       - name: Install semgrep
-        run: pipx install "semgrep==${SEMGREP_VERSION}" && semgrep --version
+        run: |
+          pipx install "semgrep==${SEMGREP_VERSION}"
+          pipx inject semgrep setuptools
+          semgrep --version
 
       # Configs and excludes copied verbatim from audit/run-audit.sh so the CI
       # numbers can be compared with the evidence pack line for line.
