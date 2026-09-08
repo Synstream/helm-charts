@@ -30,8 +30,12 @@ env:
   # goes red for a reason that has nothing to do with the code.
   SEMGREP_VERSION: "1.176.1"
   TRIVY_VERSION: "0.74.0"
-  # Two modules declare go 1.25.7, so the toolchain floor is that, not 1.24.
-  GO_VERSION: "1.25.7"
+  # The toolchain that produced audit/results/20260908-staging, recorded in the
+  # go_version field of every govulncheck-*.json there. NOT the `go` directive in
+  # go.mod, which is a language floor: pinning 1.25.7 from it made govulncheck
+  # report 16 to 38 stdlib advisories per repository that a later patch release
+  # had already fixed, none of them in the baseline or the suppression list.
+  GO_VERSION: "1.26.5"
   HELM_VERSION: "v3.16.3"
   SUPPRESSIONS: ".security-suppressions.yml"
 
@@ -238,10 +242,15 @@ jobs:
               failed="$failed $d"
             fi
           done
+          # Kustomize overlays are extra coverage, not the acceptance criterion, and
+          # some legitimately do not build standalone: config/manifests references an
+          # OLM bundle base that only operator-sdk generates. Report those, do not
+          # fail on them. A chart that does not render is a different matter.
+          kfail=""
           for k in $(find . -name kustomization.yaml -not -path '*/node_modules/*' | sort); do
             d=$(dirname "$k")
             out=".scan/rendered/kustomize_$(echo "${d#./}" | tr '/' '_').yaml"
-            kubectl kustomize "$d" > "$out" 2>>.scan/render.log || failed="$failed $d"
+            kubectl kustomize "$d" > "$out" 2>>.scan/render.log || { kfail="$kfail $d"; rm -f "$out"; }
           done
           {
             echo "### Infrastructure-as-code coverage"
@@ -251,8 +260,11 @@ jobs:
             echo "| Chart template files present | $present |"
             echo "| Chart template files rendered and scanned | $rendered |"
           } >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$kfail" ]; then
+            { echo ""; echo "Kustomize overlays that did not build, reported not fatal:$kfail"; } >> "$GITHUB_STEP_SUMMARY"
+          fi
           if [ -n "$failed" ]; then
-            echo ""; echo "Failed to render:$failed" >> "$GITHUB_STEP_SUMMARY"
+            { echo ""; echo "Charts that did not render:$failed"; } >> "$GITHUB_STEP_SUMMARY"
             echo "A chart that does not render is a chart nobody scanned. Failing."
             exit 1
           fi
