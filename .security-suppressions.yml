@@ -1,0 +1,63 @@
+# Security gate suppressions — Bank code review.
+#
+# Seeded 2026-09-08 from audit run 20260908-staging, the same evidence the Bank
+# was given. Every id here was already open on the baseline commit
+# security-baseline-20260908, so this file is the debt as it stood on that date, not
+# a way to make the build quiet.
+#
+# The gate fails on Critical and High. That threshold is not softened by this
+# file: an id absent from this list fails the build the moment it appears, which
+# is what makes a regression visible on the day it lands.
+#
+# Every entry needs four fields and the gate rejects the file without them:
+#   id       the identifier the scanner emits
+#   finding  the register entry in audit/reports/05-FINDINGS-REGISTER.md
+#   task     the BSR row that closes it
+#   owner    a person, not a team. BSR-E1 requires ownership within one working
+#            day of a finding being raised. "unassigned" is a gap, not a value.
+#   expires  the date this stops being acceptable. Past it, the build fails.
+#
+# Expiry dates follow the gate the task is due at: 2026-10-16 is G2, 2026-11-13
+# is G4, the contractual deadline for all security work. Nothing here may
+# outlive G4, because nothing may be open at G4.
+
+suppressions:
+
+  # F-02 / F-16 — 6 ids, closed by BSR-C4, expires 2026-10-16
+  - id: "KSV-0014"
+    finding: "F-02 / F-16"
+    task: "BSR-C4"
+    owner: "unassigned"
+    expires: "2026-10-16"
+  - id: "KSV-0041"
+    finding: "F-02 / F-16"
+    task: "BSR-C4"
+    owner: "unassigned"
+    expires: "2026-10-16"
+  - id: "KSV-0046"
+    finding: "F-02 / F-16"
+    task: "BSR-C4"
+    owner: "unassigned"
+    expires: "2026-10-16"
+  - id: "KSV-0056"
+    finding: "F-02 / F-16"
+    task: "BSR-C4"
+    owner: "unassigned"
+    expires: "2026-10-16"
+  - id: "KSV-0109"
+    finding: "F-02 / F-16"
+    task: "BSR-C4"
+    owner: "unassigned"
+    expires: "2026-10-16"
+  - id: "KSV-0118"
+    finding: "F-02 / F-16"
+    task: "BSR-C4"
+    owner: "unassigned"
+    expires: "2026-10-16"
+
+  # F-triage-pending — 1 ids, closed by BSR-E1, expires 2026-10-16
+  - id: "yaml.github-actions.security.run-shell-injection.run-shell-injection"
+    finding: "F-triage-pending"
+    task: "BSR-E1"
+    owner: "unassigned"
+    expires: "2026-10-16"

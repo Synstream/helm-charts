@@ -15,6 +15,12 @@ regexes = [
   # Non-secret local-development placeholders. Clearly marked and never deployed;
   # the services reject these values at startup (see config validation).
   '''dev-insecure-[a-z0-9!-]+''',
+  # Test fixtures in config_test.go's realConfig(). TestRejectDefaultSecrets asserts
+  # that DEFAULT secrets are refused, so it needs a non-default value to test with.
+  # Neither has ever been a credential. This is why gitleaks.yml has failed on
+  # synstream-core since 2026-07-31.
+  '''a-real-generated-secret-value-not-the-default''',
+  '''0123456789abcdef0123456789abcdef''',
 
   # TEMPORARY (SYN-130): legacy secrets that were committed and have since been
   # removed from source and rotated/retired, but still exist in git history.
