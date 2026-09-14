@@ -73,7 +73,7 @@ spec:
             value: {{ .Values.managerServicePort | default "8080" | quote }}
           {{- end }}
           {{- with .Values.env }}
-          {{- toYaml . | nindent 8 }}
+          {{- toYaml . | nindent 10 }}
           {{- end }}
           {{- end }}
           livenessProbe:
