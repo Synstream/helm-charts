@@ -1,0 +1,73 @@
+# BRI console instance on Azure UAT: namespace synstream-bri, host console-bri.uat.synstream.co.
+# Render with values/bri-uat-render.sh; the cluster is not Helm-managed (see that script).
+#
+# Secrets are NOT here. Before applying, create them on the node:
+#   kubectl -n synstream-bri create secret generic synstream-bri-owner \
+#     --from-literal=INIT_OWNER_PASSWORD='<12+ chars, letters and digits>'
+# and pass --set auth.secrets.jwtSecretKey=... --set auth.secrets.encryptionKey=... to the render.
+
+global:
+  image:
+    # Images are side-loaded with ctr import; a pull would fail (ghcr.io/rootsinnovation is gone).
+    pullPolicy: IfNotPresent
+
+console:
+  image:
+    tag: "bri"
+
+nginx:
+  service:
+    # ingress-nginx fronts it; the chart default LoadBalancer would sit Pending on k3s.
+    type: ClusterIP
+
+auth:
+  image:
+    tag: "bri"
+  config:
+    # Match the cookie maxAge hardcoded in the auth service (3600s).
+    jwtAccessTokenDuration: "3600"
+    # The whole SSO mechanism: one access_token cookie shared by console-bri,
+    # dashboard-bri and every <flow>-bri host.
+    cookieDomain: ".uat.synstream.co"
+    cookieSecure: "true"
+    cookieSameSite: "lax"
+  extraEnv:
+    - name: INIT_OWNER_ACCOUNT
+      value: "bri_admin"
+    - name: INIT_OWNER_NAME
+      value: "BRI Platform Owner"
+    - name: INIT_OWNER_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: synstream-bri-owner
+          key: INIT_OWNER_PASSWORD
+    # Named accounts that see the whole user directory; never a role, since every
+    # client admin is a platform owner.
+    - name: AUTH_SUPERUSER_ACCOUNTS
+      value: "bri_admin"
+    - name: SECURITY_PASSWORD_MIN_LENGTH
+      value: "12"
+    - name: SECURITY_MAX_LOGIN_ATTEMPTS
+      value: "5"
+    - name: SECURITY_LOCKOUT_DURATION
+      value: "900"
+    - name: SECURITY_HSTS_MAX_AGE
+      value: "31536000"
+
+ai:
+  enabled: false
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: console-bri.uat.synstream.co
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: console-bri-tls
+      hosts:
+        - console-bri.uat.synstream.co
