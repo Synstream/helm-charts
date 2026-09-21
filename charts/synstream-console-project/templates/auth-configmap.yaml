@@ -28,5 +28,7 @@ data:
   LOG_OUTPUT: {{ .Values.auth.config.logOutput | quote }}
   LOG_AUDIT_FILE: {{ .Values.auth.config.logAuditFile | quote }}
   LOG_FALLBACK_FILE: {{ .Values.auth.config.logFallbackFile | quote }}
+  AUDIT_RETENTION_DAYS: {{ .Values.auth.config.auditRetentionDays | quote }}
+  AUDIT_MAX_ROWS: {{ .Values.auth.config.auditMaxRows | quote }}
 {{- end }}
 

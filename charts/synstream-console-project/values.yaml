@@ -145,7 +145,9 @@ auth:
   # Persistent storage configuration
   storage:
     enabled: true
-    size: 1Gi
+    # Holds auth.db plus the audit log table. k3s local-path cannot expand a
+    # PVC online, so this has to be right before the first install.
+    size: 5Gi
     accessMode: ReadWriteOnce
     # storageClass: ""  # Use default storage class
   
@@ -191,6 +193,8 @@ auth:
     logOutput: "stdout"
     logAuditFile: "/app/data/audit.log"
     logFallbackFile: "/app/data/fallback.log"
+    auditRetentionDays: "180"
+    auditMaxRows: "2000000"
 
   # Sensitive auth config, rendered into the synstream-auth-secret Secret.
   # Supply real values at install time (--set auth.secrets.jwtSecretKey=...,
@@ -287,6 +291,7 @@ ai:
     logOutput: "stdout"
     logAuditFile: "/app/data/audit.log"
     logFallbackFile: "/app/data/fallback.log"
+    auditIngestSecret: "synstream-app-secret"
   
   # AI API secrets (should be provided via values or external secret management)
   secrets:

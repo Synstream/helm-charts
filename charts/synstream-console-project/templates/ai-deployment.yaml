@@ -34,6 +34,14 @@ spec:
             - name: http
               containerPort: 8000
               protocol: TCP
+          env:
+            # Optional so the pod still starts where no audit sink is deployed.
+            - name: AUDIT_INGEST_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.ai.config.auditIngestSecret | default "synstream-app-secret" }}
+                  key: audit-ingest-token
+                  optional: true
           envFrom:
             - configMapRef:
                 name: synstream-ai-config
