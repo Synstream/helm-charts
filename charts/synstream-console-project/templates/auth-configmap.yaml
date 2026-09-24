@@ -28,5 +28,10 @@ data:
   LOG_OUTPUT: {{ .Values.auth.config.logOutput | quote }}
   LOG_AUDIT_FILE: {{ .Values.auth.config.logAuditFile | quote }}
   LOG_FALLBACK_FILE: {{ .Values.auth.config.logFallbackFile | quote }}
+  # The retention the site agreed to. Without these two the installer collects a
+  # number, validates it, writes it into values — and the service never sees it,
+  # so every install silently keeps the built-in 180 days.
+  AUDIT_RETENTION_DAYS: {{ .Values.auth.config.auditRetentionDays | quote }}
+  AUDIT_MAX_ROWS: {{ .Values.auth.config.auditMaxRows | quote }}
 {{- end }}
 

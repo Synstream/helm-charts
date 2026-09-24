@@ -191,6 +191,10 @@ auth:
     logOutput: "stdout"
     logAuditFile: "/app/data/audit.log"
     logFallbackFile: "/app/data/fallback.log"
+    # Audit rows are purged daily, oldest first. maxRows is a hard ceiling: a
+    # full volume makes auth.db read-only and stops every login.
+    auditRetentionDays: "180"
+    auditMaxRows: "2000000"
 
   # Sensitive auth config, rendered into the synstream-auth-secret Secret.
   # Supply real values at install time (--set auth.secrets.jwtSecretKey=...,
