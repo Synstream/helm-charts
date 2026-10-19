@@ -20,6 +20,14 @@ global:
 console:
   enabled: true
   replicaCount: 1
+
+  # Run-time site settings read by the console image's entrypoint:
+  #   CONSOLE_PRODUCTS       comma-separated product ids to show; empty = all
+  #   CONSOLE_DASHBOARD_URL  dashboard address; empty = dashboard.<domain>
+  # extraEnv:
+  #   - name: CONSOLE_PRODUCTS
+  #     value: "synstream-enterprise,pipeline-studio"
+  extraEnv: []
   
   image:
     name: synstream-console-project

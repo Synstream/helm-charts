@@ -37,6 +37,10 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+          {{- with .Values.console.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.console.resources | nindent 12 }}
       {{- with .Values.console.nodeSelector }}
